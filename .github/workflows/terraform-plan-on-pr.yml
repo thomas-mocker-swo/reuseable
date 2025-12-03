@@ -49,7 +49,7 @@ jobs:
 
       - name: Run TFLint (compact)
         run: |
-          CONFIG=""$GITHUB_WORKSPACE/.central-config/.tflint.hcl"
+          CONFIG="$GITHUB_WORKSPACE/.central-config/.tflint.hcl"
           tflint --init --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
           tflint --format=compact --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
 
