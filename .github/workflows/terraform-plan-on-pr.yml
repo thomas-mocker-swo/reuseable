@@ -42,13 +42,7 @@ jobs:
         with:
           repository: thomas-mocker-swo/reuseable   # dein zentrales Repo
           path: .central-config
-          ref: main    
-          
-      # 3) Debug: zeigen, was wirklich da ist
-      - name: List central config contents
-        run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          ls -R .                             # oder Tag/Commit z.B. v1
+          ref: main                              # oder Tag/Commit z.B. v1
 
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@v4
