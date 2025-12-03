@@ -70,6 +70,7 @@ jobs:
           output_file_path: checkov-results.sarif
           quiet: true
           soft_fail: false
+          #skip_check: CKV_AZURE_43  # Beispiel zum Überspringen einer spezifischen Prüfung
 
       - name: Upload Checkov SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
