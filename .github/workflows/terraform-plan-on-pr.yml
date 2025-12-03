@@ -49,7 +49,7 @@ jobs:
 
       - name: Run TFLint (compact)
         run: |
-          CONFIG="$GITHUB_WORKSPACE/.central-config/.github/tflint/.tflint.hcl"
+          CONFIG="thomas-mocker-swo/reuseable/.central-config/.github/tflint/.tflint.hcl"
           tflint --init --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
           tflint --format=compact --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
 
