@@ -32,18 +32,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # 1) Aufrufendes Repo (mit Terraform-Code) auschecken
+      - name: Checkout caller repo
         uses: actions/checkout@v4
+
+      # 2) Zentrales Repo mit .tflint.hcl in Unterordner auschecken
+      - name: Checkout central tflint config
+        uses: actions/checkout@v4
+        with:
+          repository: thomas-mocker-swo/reuseable   # dein zentrales Repo
+          path: .central-config
+          ref: main                                 # oder Tag/Commit z.B. v1
 
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@v4
 
-      # kompakte Ausgabe fürs Log
       - name: Run TFLint (compact)
-        working-directory: ${{ inputs.tf_working_directory }}
         run: |
-          tflint --init
-          tflint --format=compact
+          CONFIG="$(pwd)/.central-config/.tflint.hcl"
+          tflint --init --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
+          tflint --format=compact --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
 
   checkov:
     name: Checkov Security Scan
