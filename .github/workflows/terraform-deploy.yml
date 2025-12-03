@@ -1,0 +1,108 @@
+name: Reusable Terraform Deploy on Main
+
+on:
+  workflow_call:
+    inputs:
+      tf_working_directory:
+        description: "Pfad zum Terraform-Code im aufrufenden Repo"
+        required: false
+        default: "."
+        type: string
+      backend_config_file:
+        description: "Backend-Config-Datei für terraform init"
+        required: false
+        default: "backend.conf"
+        type: string
+      environment_name:
+        description: "GitHub Environment Name für das Approval-Gate"
+        required: false
+        default: "production"
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+
+env:
+  ARM_CLIENT_ID:      ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID:      ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    outputs:
+      plan_file: ${{ steps.setplan.outputs.plan_file }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.tf_working_directory }}
+        run: terraform init -backend-config="${{ inputs.backend_config_file }}"
+
+      - name: Terraform Plan
+        id: setplan
+        working-directory: ${{ inputs.tf_working_directory }}
+        run: |
+          PLAN_NAME="tfplan-${GITHUB_RUN_ID}"
+          terraform plan -out="${PLAN_NAME}.binary"
+          terraform show -no-color "${PLAN_NAME}.binary"
+          echo "plan_file=${PLAN_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: |
+            ${{ inputs.tf_working_directory }}/${{ steps.setplan.outputs.plan_file }}.binary
+
+  wait-for-approval:
+    name: Wait for Manual Approval
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    environment:
+      name: ${{ inputs.environment_name }}  # Environment mit Approval-Gate
+
+    steps:
+      - name: Approval Gate
+        run: echo "Waiting for approval..."
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: wait-for-approval
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: ${{ inputs.tf_working_directory }}
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.tf_working_directory }}
+        run: terraform init -backend-config="${{ inputs.backend_config_file }}"
+
+      - name: Terraform Apply
+        working-directory: ${{ inputs.tf_working_directory }}
+        run: |
+          terraform apply "tfplan-${GITHUB_RUN_ID}.binary"
+
+      - name: Cleanup Plan Files
+        working-directory: ${{ inputs.tf_working_directory }}
+        run: rm -f "tfplan-${GITHUB_RUN_ID}.binary"
