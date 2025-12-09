@@ -53,8 +53,8 @@ jobs:
           tflint --init --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
           tflint --format=compact --config "$CONFIG" --chdir="${{ inputs.tf_working_directory }}"
 
-  tfsec:
-    name: tfsec Security Scan
+  trivy:
+    name: Trivy Security Scan
     runs-on: ubuntu-latest
     needs: tflint
 
@@ -62,16 +62,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.3
+      - name: Run Trivy (includes tfsec checks)
+        uses: aquasecurity/trivy-action@master
         with:
-          working_directory: ${{ inputs.tf_working_directory }}
-          soft_fail: false
+          scan-type: 'config'
+          scan-ref: ${{ inputs.tf_working_directory }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
 
   checkov:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
-    needs: tfsec
+    needs: trivy
 
     steps:
       - name: Checkout
