@@ -85,23 +85,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy config scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.tf_working_directory }}
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          hide-progress: false
+          tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
 
       - name: Run Trivy SARIF output
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.tf_working_directory }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          hide-progress: false
+          tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
 
       - name: Upload Trivy SARIF
         if: always()
