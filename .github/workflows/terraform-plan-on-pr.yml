@@ -62,15 +62,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Trivy (includes tfsec checks)
-        uses: aquasecurity/trivy-action@master
+      - name: Debug - List files
+        run: |
+          echo "=== Files in working directory ==="
+          ls -la ${{ inputs.tf_working_directory }}
+          echo "=== Terraform files ==="
+          find ${{ inputs.tf_working_directory }} -name "*.tf" || echo "No .tf files found"
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'config'
-          scan-ref: ${{ inputs.tf_working_directory }}
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'config'
+          skip-dirs: '.terraform'
+        env:
+          TRIVY_TERRAFORM_DIR: ${{ inputs.tf_working_directory }}
+
+      - name: Run Trivy SARIF output
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          exit-code: '1'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'config'
+          skip-dirs: '.terraform'
+        env:
+          TRIVY_TERRAFORM_DIR: ${{ inputs.tf_working_directory }}
 
       - name: Upload Trivy SARIF
         if: always()
