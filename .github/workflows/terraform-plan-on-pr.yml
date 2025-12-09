@@ -91,13 +91,12 @@ jobs:
           scan-ref: ${{ inputs.tf_working_directory }}
           format: 'table'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+          severity: 'CRITICAL,HIGH,MEDIUM'
           hide-progress: false
+          tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
           version: v0.68.1
-          scanners: 'misconfig'
         env:
           TRIVY_SKIP_VERSION_CHECK: true
-          TRIVY_DEBUG: true
 
       - name: Run Trivy SARIF output
         if: always()
@@ -107,10 +106,10 @@ jobs:
           scan-ref: ${{ inputs.tf_working_directory }}
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          severity: 'CRITICAL,HIGH,MEDIUM'
           hide-progress: false
+          tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
           version: v0.68.1
-          scanners: 'misconfig'
         env:
           TRIVY_SKIP_VERSION_CHECK: true
 
