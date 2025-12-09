@@ -94,6 +94,9 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           hide-progress: false
           tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
+          version: v0.68.1
+        env:
+          TRIVY_SKIP_VERSION_CHECK: true
 
       - name: Run Trivy SARIF output
         if: always()
@@ -106,6 +109,9 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           hide-progress: false
           tf-vars: ${{ inputs.tf_working_directory }}/terraform.tfvars
+          version: v0.68.1
+        env:
+          TRIVY_SKIP_VERSION_CHECK: true
 
       - name: Upload Trivy SARIF
         if: always()
