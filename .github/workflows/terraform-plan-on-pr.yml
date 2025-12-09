@@ -72,9 +72,10 @@ jobs:
           #skip_check: CKV_AZURE_43  # Beispiel zum Überspringen einer spezifischen Prüfung
 
       - name: Upload Checkov SARIF to GitHub Security
+        if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: checkov-results.sarif
+          sarif_file: ${{ inputs.tf_working_directory }}/checkov-results.sarif
 
   trivy:
     name: Trivy Config Scan
